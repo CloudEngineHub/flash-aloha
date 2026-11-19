@@ -1,0 +1,5 @@
+[src]
+exclude = [
+    "src/hardware/arx5-sdk",
+    "src/kdl_parser",
+]
