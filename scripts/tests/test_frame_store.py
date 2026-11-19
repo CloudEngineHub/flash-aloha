@@ -9,6 +9,8 @@ import torch
 from data_processing.episode_data import clear_episode_cache
 from test_raw_training import make_raw
 
+pytestmark = pytest.mark.slow
+
 
 CAMERAS = ['video_left', 'video_overhead']
 

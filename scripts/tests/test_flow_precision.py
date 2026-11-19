@@ -171,6 +171,7 @@ def test_training_is_always_bf16():
     assert 'autocast' not in inspect.getsource(imitate_episodes_train.train_bc)
 
 
+@pytest.mark.gpu
 @cuda
 def test_bf16_policy_on_cuda_trains_and_its_fast_inference_matches():
     from policy.fast_flow_inference import GraphedUNetStep, accelerate_flow_policy

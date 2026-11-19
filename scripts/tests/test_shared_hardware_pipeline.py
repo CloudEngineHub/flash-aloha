@@ -170,6 +170,7 @@ def reached(arm, target):
             if kind == 'target' and np.allclose(value, target)]
 
 
+@pytest.mark.slow
 def test_shared_holds_then_ramps_to_saved_start_warms_up_and_homes_on_quit(tmp_path, monkeypatch):
     arm, session, warmups, run = shared_setup(tmp_path, monkeypatch, [(None, 'q')])
     run()
@@ -188,6 +189,7 @@ def test_shared_holds_then_ramps_to_saved_start_warms_up_and_homes_on_quit(tmp_p
     session.tick.assert_not_called()  # it never left the paused start pose
 
 
+@pytest.mark.slow
 def test_shared_episode_end_holds_and_next_episode_starts_from_saved_pose(tmp_path, monkeypatch):
     executed = threading.Event()
     def tick(observe, prompt):
@@ -221,6 +223,7 @@ def reset_targets(arm):
     return targets, arrival, anchor
 
 
+@pytest.mark.slow
 def test_shared_reset_opens_gripper_on_the_way_back_then_sets_saved_gripper(tmp_path, monkeypatch):
     arm, session, warmups, run = shared_setup(tmp_path, monkeypatch, [(None, 'r'), (None, 'q')])
     arm.open_gripper_target = lambda: OPEN_GRIPPER
@@ -246,6 +249,7 @@ def test_shared_reset_opens_gripper_on_the_way_back_then_sets_saved_gripper(tmp_
     assert arm.events[-2][0] == 'home'
 
 
+@pytest.mark.slow
 def test_shared_reset_keeps_saved_gripper_when_open_position_is_unknown(tmp_path, monkeypatch):
     arm, session, warmups, run = shared_setup(tmp_path, monkeypatch, [(None, 'r'), (None, 'q')])
     run()  # the simulated arm has no calibrated gripper
@@ -276,6 +280,7 @@ def test_shared_refuses_to_run_without_a_start_pose(tmp_path, monkeypatch):
     assert arm.sent == [] and not warmups  # rejected before connecting or querying
 
 
+@pytest.mark.slow
 def test_shared_keeps_targets_fresh_while_a_synchronous_query_blocks(tmp_path, monkeypatch):
     # A 0.1 s command watchdog: a blocking query without the background hold would expire it.
     executed = threading.Event()

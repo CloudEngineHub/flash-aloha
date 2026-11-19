@@ -213,6 +213,7 @@ def test_replay_filter_selects_episodes_by_recording_metadata(monkeypatch):
         replay_data.replay_filter('some')
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('cameras,dim', SHAPES)
 def test_flow_handles_up_to_three_cameras_and_two_arms(cameras, dim):
     torch.manual_seed(0)
@@ -237,6 +238,7 @@ def test_act_recipes_parse_with_their_hyperparameters():
     assert rtc.policy_class == 'ACT' and not rtc.no_training_time_rtc and rtc.training_time_rtc_max_delay == 5
 
 
+@pytest.mark.gpu
 @cuda
 @pytest.mark.parametrize('cameras,dim', [(2, 7), (3, 14)])
 def test_act_cuda_graph_matches_eager_and_attention_runs_on_flash(cameras, dim):
@@ -256,6 +258,7 @@ def test_act_cuda_graph_matches_eager_and_attention_runs_on_flash(cameras, dim):
     assert policy.forward_inf(qpos, image).shape == (3, 10, dim)  # other batch sizes run eagerly
 
 
+@pytest.mark.gpu
 @cuda
 def test_act_cuda_graph_serves_every_rtc_prefix_length():
     from policy.model_util import accelerate_policy

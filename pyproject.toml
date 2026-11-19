@@ -34,7 +34,11 @@ dependencies = [
 exclude-dependencies = ["opencv-python-headless"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = [
+    "pytest>=8.0",
+    "pytest-testmon>=2.2.0",
+    "pytest-xdist>=3.8.0",
+]
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -51,3 +55,8 @@ config = ["*.yaml", "tasks/*.yaml", "training/*.yaml", "inference/*.yaml"]
 [tool.pytest.ini_options]
 testpaths = ["scripts/tests"]
 pythonpath = ["src", "scripts/tests"]
+addopts = ["--strict-markers"]
+markers = [
+    "slow: takes about a second or more; left out of the fast run",
+    "gpu: needs a CUDA GPU; runs only when asked for",
+]

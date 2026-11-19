@@ -17,6 +17,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'src'))
 import camera_utils.robotmq_camera_cache as native
 from camera_utils.camera_timing import CameraTimingError, publish_shared_clock_contract
 
+pytestmark = pytest.mark.slow
+
 
 PUBLISHER = r'''
 import json, mmap, os, pathlib, struct, sys, time

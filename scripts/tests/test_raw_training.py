@@ -118,6 +118,7 @@ def test_training_reads_stream_data_directly(raw, monkeypatch):
     assert val is None
 
 
+@pytest.mark.slow
 def test_raw_workers_have_independent_decoders(raw, monkeypatch):
     from policy import training_utils as training
     train, val, *_ = training.load_data(2, None, str(raw.parent.parent), lambda _: True,

@@ -137,6 +137,7 @@ def test_gain_keys_outside_a_replay_only_change_the_numbers(clock):
     assert arm.passive_calls == 0 and 'kp x1.10, kd x0.95' in log[-1]
 
 
+@pytest.mark.slow
 def test_graph_flag_draws_each_played_replay_from_its_tracking_log(clock, tmp_path, monkeypatch):
     """--graph starts the graph script on the log the replay wrote; the script draws that log."""
     from types import SimpleNamespace

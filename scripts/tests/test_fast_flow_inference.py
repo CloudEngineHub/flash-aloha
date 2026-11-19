@@ -26,6 +26,7 @@ def test_convert_replaces_every_conv1d_and_nothing_else():
     assert isinstance(model[0], ChannelsLastConv1d) and isinstance(model[1][1], nn.ConvTranspose1d)
 
 
+@pytest.mark.gpu
 @cuda
 def test_accelerated_policy_matches_eager_and_keeps_the_rtc_prefix():
     torch.manual_seed(0)
@@ -50,6 +51,7 @@ def test_accelerated_policy_matches_eager_and_keeps_the_rtc_prefix():
     assert fast.forward_inf(qpos.expand(2, -1), image.expand(2, -1, -1, -1, -1)).shape == (2, 16, 7)
 
 
+@pytest.mark.gpu
 @cuda
 def test_accelerated_policy_without_graph_and_its_guards():
     policy = small_policy().cuda().eval()
