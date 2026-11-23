@@ -17,6 +17,7 @@ FRICTION_TAG = "arx5_friction_compensation"
 sys.path.append(ROOT_DIR)
 os.chdir(ROOT_DIR)
 import arx5_interface as arx5
+from tuning_highlight_window import open_tuning_highlight_window
 
 
 @dataclass
@@ -323,6 +324,7 @@ def run_tuner(
     gripper_bump_torque,
     joint_bump_torque,
     bump_time,
+    highlight_window,
 ):
     curses.curs_set(0)
     stdscr.nodelay(True)
@@ -358,7 +360,7 @@ def run_tuner(
     pulse_until = 0.0
 
     while True:
-        key = stdscr.getch()
+        key = highlight_window.key_or(stdscr.getch())
         changed_terms = False
 
         while key != -1:
@@ -438,12 +440,16 @@ def run_tuner(
                     last_config_status = f"load failed: {exc}"
             elif key == ord("p"):
                 paused = not paused
-            key = stdscr.getch()
+            key = highlight_window.key_or(stdscr.getch())
 
         if changed_terms:
             apply_terms(controller, gripper_terms, joint_terms, friction_enabled)
 
         state = controller.get_joint_state()
+        if target_index == 0:
+            highlight_window.show_gripper(state.pos())
+        else:
+            highlight_window.show_joint(target_index - 1, state.pos())
         command_gripper_torque = 0.0
         command_joint_torque = np.zeros(robot_config.joint_dof, dtype=np.float64)
 
@@ -500,6 +506,7 @@ def run_tuner(
 @click.option("--gripper-bump-torque", default=0.03, show_default=True, type=float, help="Torque pulse magnitude for gripper bump tests, in Nm.")
 @click.option("--joint-bump-torque", default=0.2, show_default=True, type=float, help="Torque pulse magnitude for arm-joint bump tests, in Nm.")
 @click.option("--bump-time", default=0.15, show_default=True, type=float, help="Duration of each b/v torque pulse in seconds.")
+@click.option("--highlight-window/--no-highlight-window", default=True, show_default=True, help="Show a window that highlights the joint or gripper being tuned on the arm's CAD model; the tuning keys also work while it has focus.")
 def main(
     model,
     interface,
@@ -511,12 +518,14 @@ def main(
     gripper_bump_torque,
     joint_bump_torque,
     bump_time,
+    highlight_window,
 ):
     robot_config = arx5.RobotConfigFactory.get_instance().get_config(model)
     if urdf_path is None:
         urdf_path = robot_config.urdf_path
     if robot_config.gripper_motor_type != arx5.MotorType.DM_J4310:
         raise click.ClickException("This tuner only supports DM_J4310 gripper motors.")
+    highlight_window = open_tuning_highlight_window(model, highlight_window)
 
     controller_config = arx5.ControllerConfigFactory.get_instance().get_config(
         "joint_controller", robot_config.joint_dof
@@ -557,6 +566,7 @@ def main(
             gripper_bump_torque,
             joint_bump_torque,
             bump_time,
+            highlight_window,
         )
     finally:
         controller.set_friction_compensation(False)
@@ -564,6 +574,9 @@ def main(
         controller.set_joint_friction_compensation(False, zero, zero, zero, zero)
         controller.set_gripper_friction_compensation(False, 0.0, 0.0, 0.0, 0.0)
         controller.set_to_damping()
+        highlight_window.close()
+        if highlight_window.closed_reason:
+            click.echo(f"No joint highlight window: {highlight_window.closed_reason}")
 
 
 if __name__ == "__main__":

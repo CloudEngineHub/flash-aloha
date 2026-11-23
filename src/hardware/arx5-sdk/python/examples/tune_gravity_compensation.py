@@ -17,6 +17,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT_DIR)
 os.chdir(ROOT_DIR)
 import arx5_interface as arx5
+from tuning_highlight_window import open_tuning_highlight_window
 
 
 def clamp(value, low, high):
@@ -333,6 +334,7 @@ def run_tuner(
     mass_step,
     min_mass,
     max_mass,
+    highlight_window,
 ):
     curses.curs_set(0)
     stdscr.nodelay(True)
@@ -364,7 +366,7 @@ def run_tuner(
         solver = rebuild_solver(robot_config, urdf_path, solver_path, masses)
 
         while True:
-            key = stdscr.getch()
+            key = highlight_window.key_or(stdscr.getch())
 
             while key != -1:
                 link_name = link_names[target_index]
@@ -450,9 +452,10 @@ def run_tuner(
                         status = f"load failed: {exc}"
                 elif key == ord("p"):
                     paused = not paused
-                key = stdscr.getch()
+                key = highlight_window.key_or(stdscr.getch())
 
             state = controller.get_joint_state()
+            highlight_window.show_link(link_names[target_index], state.pos())
             gravity_torque = np.zeros(robot_config.joint_dof, dtype=np.float64)
             if gravity_enabled and not paused:
                 gravity_torque = np.asarray(
@@ -504,7 +507,8 @@ def run_tuner(
 @click.option("--mass-step", default=0.01, show_default=True, type=click.FloatRange(min=1e-9), help="Base mass adjustment in kg.")
 @click.option("--min-mass", default=0.0, show_default=True, type=click.FloatRange(min=0.0), help="Minimum tunable link mass in kg.")
 @click.option("--max-mass", default=10.0, show_default=True, type=click.FloatRange(min=0.0), help="Maximum tunable link mass in kg.")
-def main(model, interface, loop_dt, urdf_path, mass_step, min_mass, max_mass):
+@click.option("--highlight-window/--no-highlight-window", default=True, show_default=True, help="Show a window that highlights the link being tuned on the arm's CAD model; the tuning keys also work while it has focus.")
+def main(model, interface, loop_dt, urdf_path, mass_step, min_mass, max_mass, highlight_window):
     if loop_dt <= 0.0:
         raise click.ClickException("--loop-dt must be positive")
     if max_mass < min_mass:
@@ -515,6 +519,7 @@ def main(model, interface, loop_dt, urdf_path, mass_step, min_mass, max_mass):
         urdf_path = robot_config.urdf_path
     load_link_masses(urdf_path, model)
     robot_config.urdf_path = urdf_path
+    highlight_window = open_tuning_highlight_window(model, highlight_window)
 
     controller_config = arx5.ControllerConfigFactory.get_instance().get_config(
         "joint_controller", robot_config
@@ -549,6 +554,7 @@ def main(model, interface, loop_dt, urdf_path, mass_step, min_mass, max_mass):
             mass_step,
             min_mass,
             max_mass,
+            highlight_window,
         )
     finally:
         controller.set_gravity_compensation(False)
@@ -558,6 +564,9 @@ def main(model, interface, loop_dt, urdf_path, mass_step, min_mass, max_mass):
         controller.set_joint_cmd(zero_cmd)
         time.sleep(loop_dt * 2.0)
         controller.set_to_damping()
+        highlight_window.close()
+        if highlight_window.closed_reason:
+            click.echo(f"No link highlight window: {highlight_window.closed_reason}")
 
 
 if __name__ == "__main__":

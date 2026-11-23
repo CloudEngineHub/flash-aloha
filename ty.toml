@@ -3,3 +3,6 @@ exclude = [
     "src/hardware/arx5-sdk",
     "src/kdl_parser",
 ]
+
+[environment]
+extra-paths = ["src/hardware/arx5-sdk/python/examples"]
